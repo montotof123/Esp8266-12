@@ -1,0 +1,3 @@
+- http://raspberrypi.pagesperso-orange.fr/
+- http://raspberrypi.pagesperso-orange.fr/esp8266-12/ESP8266-12.pdf
+- http://raspberrypi.pagesperso-orange.fr/esp8266-12/dossiers/15-00.htm
