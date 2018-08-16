@@ -1,2 +1,2 @@
-# esp8266-12
-# Programmes pour ESP8266-12
+- http://raspberrypi.pagesperso-orange.fr/
+- http://raspberrypi.pagesperso-orange.fr/esp8266-12/ESP8266-12.pdf
