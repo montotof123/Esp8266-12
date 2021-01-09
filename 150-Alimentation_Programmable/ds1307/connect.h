@@ -10,6 +10,6 @@
 #define connect_h
 
 #define SSID "Livebox-2EB0";
-#define PASSWORD "myvGqy4AF6HsemD33m";
+#define PASSWORD "xxxxxxxxxxxxxxxxxxx";
 
 #endif	//connect_h
