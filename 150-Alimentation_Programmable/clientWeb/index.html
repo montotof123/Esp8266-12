@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html>
+	<!-- *********************** -->	
+	<!-- Page principale du site -->	
+	<!-- *********************** -->	
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="application-name" content="Alimentation">
+		<meta name="description" content="Gestion de l'alimentation à base d'ESP8266-12">
+		<meta name="author" content="christophe.sinclair@orange.com">
+		<meta name="generator" content="notepad++">
+		<meta name="keywords" content="ESP8266-12 Arduino INA219 LM2596">
+		<meta name="robots" content="noindex">
+		<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+		<link rel="stylesheet" type="text/css" href="css/gestion.css">
+		<link rel="shortcut icon" type="image/jpg" href="images/icon.png"/>
+		<title>Gestion de l'alimentation à base d'ESP8266-12</title>
+	</head>
+	
+	<body>
+		<!-- Informations -->
+		<div class="row justify-content-around bordered" style="margin:1em">
+			<!-- Adresse IP -->
+			<div class="col-2">
+				<label style="text-align:left; font-weight: bold; color: WHITE; margin:0 0 0 2em" class="control-label" for = "adresse">Adresse IP</label>
+				<div class="input-group mb-3">
+					<span title="Début de l'adresse IP" class="input-group-text" id="affAdresse">192.168.1.</span>
+					<input title="Dernier octet de l'adresse IP" class = "col-2" type="number" min="0" max="255" value="50" step="1" id="adresse" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="affAdresse">
+				</div>
+			</div>
+			<!-- Test de connexion et affichage des commandes -->
+			<div class="col-2">
+				<label style="text-align:left; font-weight: bold; color: WHITE" class="control-label" for = "tstConnexion">Connexion</label>
+				<br>
+				<input title="Test la connection et envoie les commandes disponibles" class="col-6" type="button" id="tstConnexion" value="Test connexion">
+			</div>
+			<!-- Horloge -->
+			<div class="col-2">
+				<label style="text-align:left; font-weight: bold; color: WHITE; margin:0 0 0 2em" class="control-label col-1" for = "horloge">Horloge</label>
+				<div class="input-group mb-3">
+					<span title="Horloge de l'ESP8266" class="input-group-text opacity-75" id="horloge">00/00/0000 00:00:00</span>
+				</div>
+			</div>
+			<!-- Réveil -->
+			<div class="col-4">
+				<label style="text-align:left; font-weight: bold; color: WHITE; margin:0 0 0 10em" class="control-label" for = "reveil">Réveil</label>
+				<div class="input-group mb-3">
+					<input title="Date de réveil de l'alimentation" type="date" id="dateReveil">
+					&nbsp;
+					<input title="Heure de réveil de l'alimentation" type="time" id="timeReveil" step="1">
+					&nbsp;
+					<input title="Programme le réveil avec la date et l'heure indiquées" type="button" id="setReveil" value="Programme réveil">
+				</div>
+			</div>
+			<div class="col-2"></div>
+		</div>
+		
+		<!-- Résultat des commandes -->
+		<div class="row justify-content-around bordered" style="margin:1em">
+			<input title="Efface les retours des commandes" style="margin:1em 0 0 1em" class="col-2" type="button" id="effaceResultCommande" value="Efface résultat commande">
+			<div class="col-9"></div>
+			<div class="col-12" id="resultCommande" style="color:ORANGE; margin:1em 0 0 0"></div>
+		</div>
+
+		<!-- Réglage -->
+		<div class="row justify-content-around bordered"  style="margin:1em">
+			<!-- Réglage de la tension -->			
+			<div class="col-2">
+				<div><label style="font-weight: bold; color: WHITE; margin:2em 0 0 1em" class="control-label">Tension</label></div>
+				<input title="Réglage de la tension: unité" class = "col-2" type="number" min="0" max="11" value="0" step="1" id="uniteTension">	
+				<label style="font-weight: bold; color: WHITE" >,</label>
+				<input title="Réglage de la tension: dizième" class = "col-2" type="number" min="0" max="9" value="0" step="1" id="dixiemeTension">	
+				<input title="Réglage de la tension: centième" class = "col-2" type="number" min="0" max="9" value="0" step="1" id="centiemeTension">	
+				<label style="font-weight: bold; color: WHITE" >Volts</label>
+				<div><input title="Régle la tension à la valeur saisie" style="margin: 0.3em 0 0 1em"  class = "col-5" type="button" id="reglageTension" value="Réglage"></div>					
+				<!-- Commande du relai -->
+				<div class="form-check form-switch col-1">
+					<div><label style="text-align:left; font-weight: bold; color: WHITE; margin:2em 0 0 0" class="control-label">Relais</label></div>
+					<input title="Activation/Désactivation du relais" style="margin:0.3em 0 0 0" class="form-check-input" type="checkbox" id="relais">
+				</div>				
+			</div>				
+			<!-- Mesures -->
+			<div class="col-2">
+				<div><label style="font-weight: bold; color: WHITE; margin:2em 0 0 1em" class="control-label">Mesure</label></div>
+				<div><input title="Demande une mesure de tension" style="margin: 0.3em 0 0 1em"  class = "col-5" type="button" id="mesureTension" value="Tension"></div>					
+				<div><input title="Demande une mesure de courant" style="margin: 0.3em 0 0 1em"  class = "col-5" type="button" id="mesureCourant" value="Courant"></div>					
+				<div><input title="Demande une mesure de puissance" style="margin: 0.3em 0 0 1em"  class = "col-5" type="button" id="mesurePuissance" value="Puissance"></div>	
+			</div>				
+			<!-- Valeurs mesurées -->
+			<div title="Affichage de la mesure demandée" class="col-1 borderedCarre">
+				<div><label style="text-align:left; font-weight: bold; color: WHITE; margin:1em 0 0 0.5em" class="control-label">Valeur</label></div>
+				<div><label style="text-align:left; font-weight: bold; color: RED; margin: 0.6em 0 0 0.5em" id="valTension" class="control-label"></label></div>
+				<div><label style="text-align:left; font-weight: bold; color: ORANGE; margin: 1em 0 0 0.5em" id="valCourant" class="control-label"></label></div>
+				<div><label style="text-align:left; font-weight: bold; color: YELLOW; margin: 1.4em 0 0 0.5em" id="valPuissance" class="control-label"></label></div>
+			</div>
+			<!-- Gestion des afficheurs -->
+			<div class="form-check form-switch col-2 affichage">
+				<div><label style="text-align:left; font-weight: bold; color: WHITE; margin:2em 0 0 0" class="control-label">Affichage</label></div>
+				<div class="form-check">
+					<input title="Active l'affichage de la tension sur les afficheurs du module" style="margin:0.3em 0 0 0" class="form-check-input" type="radio" name="affiche" id="affTension" value="Tension"checked>
+					<label style="text-align:left; font-weight: bold; color: WHITE; margin:0.3em 0 0 0.3em" class="form-check-label" for="affTension">Tension</label>
+				</div>
+				<div class="form-check">
+					<input title="Active l'affichage du courant sur les afficheurs du module"style="margin:0.3em 0 0 0" class="form-check-input" type="radio" name="affiche" id="affCourant" value="Courant">
+					<label style="text-align:left; font-weight: bold; color: WHITE; margin:0.3em 0 0 0.3em" class="form-check-label" for="affCourant">Courant</label>
+				</div>
+				<div class="form-check">
+				    <input title="Active l'affichage de la puissance sur les afficheurs du module"style="margin:0.3em 0 0 0" class="form-check-input" type="radio" name="affiche" id="affPuissance" value="Puissance">
+				    <label style="text-align:left; font-weight: bold; color: WHITE; margin:0.3em 0 0 0.3em" class="form-check-label" for="affPuissance">Puissance</label>
+				</div>
+				<div class="form-check">
+				    <input title="Eteind les afficheurs du module"style="margin:0.3em 0 0 0" class="form-check-input" type="radio" name="affiche" id="affEteins" value="Eteins">
+				    <label style="text-align:left; font-weight: bold; color: WHITE; margin:0.3em 0 0 0.3em" class="form-check-label" for="affEteins">Eteint</label>
+				</div>
+			</div>
+			<!-- Mémoire -->
+			<div class="col-3">
+				<div><label style="text-align:left; font-weight: bold; color: WHITE" class="control-label">Nombre de mesures mémorisées par seconde</label></div>
+				<div style="margin:0 0 0 5em" class="col-3">
+					<select title="Positionne le nombre de mesures effectuées par seconde" class="form-select form-select-sm" size="11" id="nbMesure">
+						<option value="160">160</option>
+						<option value="90">90</option>
+						<option value="72">72</option>
+						<option value="54">54</option>
+						<option value="40">40</option>
+						<option value="25">25</option>
+						<option value="13">13</option>
+						<option value="7">7</option>
+						<option value="4">4</option>
+						<option value="2">2</option>
+						<option value="1">1</option>
+					</select>
+				</div>				
+			</div>				
+			<!-- Commande de la mémoire -->
+			<div class="form-check form-switch col-2">
+				<!-- Activation de l'utilisation de la mémoire série -->
+				<div><label style="text-align:left; font-weight: bold; color: WHITE" class="control-label">Mémoire</label></div>
+				<input title="Active la mémorisation de la mesure du courant" style="margin:0.3em 0 0 0" class="form-check-input col-12" type="checkbox" id="memoire">
+				<br>
+				<!-- Utilisation circulaire de la mémoire série (le pointeur repasse automatiquement à 0 lorsque la mémoire est écrite en totalité de l'usage)-->
+				<div><label style="text-align:left; font-weight: bold; color: WHITE" class="control-label">Mémoire circulaire</label></div>
+				<input title="Active l'écrasement des mesures de manière cyclique" style="margin:0.3em 0 0 0" class="form-check-input col-12" type="checkbox" id="memoireCirculaire">
+				<br>
+				<!-- Remet la mémoire à 0 -->
+				<input title="Reset de la mémoire des mesures" style="margin: 0.3em 0 0 0"  class = "col-5" type="button" id="resetMemoire" value="Reset">				
+				<!-- Donne le nombre d'octet utilisé dans la mémoire série -->			
+				<div><label style="font-weight: bold; color: WHITE; margin:1em 0 0 0" class="control-label">Usage</label></div>
+				<input title="Nombre d'octets affectés à la mémorisation des mesures" class = "col-5" type="number" min="0" max="131070" value="0" step="5" id="usageMemoire">	
+				<br>
+				<!-- Demande la position du pointeur d'écriture de la mémoire série -->
+				<input title="Donne la position du pointeur de la mémoire des mesures" style="margin: 0.3em 0 0 0"  class = "col-5" type="button" id="pointeur" value="Pointeur">				
+			</div>				
+		</div>
+
+		<!-- Courbe -->
+		<div class="row justify-content-around bordered" style="margin:1em" id="resultCourbe">
+			<input title="Demande la courbe des mesures mémorisées" style="margin:1em 0 1em 1em" class="col-1" type="button" id="courbe" value="Courbe">
+			<div class="col-1"></div>
+			<div class="col-2">
+				<label style="text-align:left; font-weight: bold; color: WHITE" class="control-label" for = "tempsMin">Temps min</label>
+				<div title="Temps initial des mesures" class="input-group mb-3">
+					<span class="input-group-text opacity-75" id="tempsMin">0</span>
+				</div>
+			</div>
+			<div class="col-2">
+				<label style="text-align:left; font-weight: bold; color: WHITE" class="control-label" for = "tempsMax">Temps max</label>
+				<div title="Temps final des mesures" class="input-group mb-3">
+					<span class="input-group-text opacity-75" id="tempsMax">0</span>
+				</div>
+			</div>
+			<div class="col-2">
+				<label style="text-align:left; font-weight: bold; color: WHITE" class="control-label" for = "mesureMin">Mesure min</label>
+				<div title="Valeur de courant mémorisée minimum" class="input-group mb-3">
+					<span class="input-group-text opacity-75" id="mesureMin">0</span>
+				</div>
+			</div>
+			<div class="col-2">
+				<label style="text-align:left; font-weight: bold; color: WHITE" class="control-label" for = "mesureMax">Mesure max</label>
+				<div title="Valeur de courant mémorisée maximum" class="input-group mb-3">
+					<span class="input-group-text opacity-75" id="mesureMax">0</span>
+				</div>
+			</div>
+
+			<canvas title="Courbe des mesures mémorisées par rapport au temps" id='myCanvas' width="0" height="0"></canvas>
+		</div>				
+		
+		<script src="js/libFunctions.js"></script>
+		<script>
+			// **************************
+			//       Initialisation
+			// **************************
+			$(function() {
+				// Horloge
+				setInterval(function() 
+				{
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getHorloge', function( result ) {
+						let horloge = "";
+						if(result.day < 10) {
+							horloge = "0" + result.day + "/";
+						} else {
+							horloge = result.day + "/";
+						}	
+						if(result.month < 10) {
+							horloge += "0" + result.month + "/";
+						} else {
+							horloge += result.month + "/";
+						}	
+						horloge += result.year + " ";
+						if(result.hour < 10) {
+							horloge += "0" + result.hour + ":";
+						} else {
+							horloge += result.hour + ":";
+						}	
+						if(result.minute < 10) {
+							horloge += "0" + result.minute + ":";
+						} else {
+							horloge += result.minute + ":";
+						}	
+						if(result.second < 10) {
+							horloge += "0" + result.second;
+						} else {
+							horloge += result.second;
+						}	
+						
+						$('#horloge').text(horloge);
+					});
+				}, 1000);
+				
+				affTension();
+				
+				affRelais();
+				
+				affReveil();
+				
+				stateAffichage();
+				
+				nombreMesures();
+				
+				stateMemory()
+				
+				stateCircleMemory();
+				
+				memoryUsage();				
+			});
+			
+			// **************************
+			//        Commandes
+			// **************************
+			
+			$(function() {
+				$('#adresse').change(function() {
+					affTension();
+					affRelais();
+					affReveil();
+					stateAffichage();
+					nombreMesures();
+					stateMemory()
+					stateCircleMemory();
+					memoryUsage();				
+				});
+			});
+			
+			// Test connexion
+			$(function() {
+				$('#tstConnexion').click(function() {
+					$('#resultCommande').load('http://' + $('#affAdresse').text() + $('#adresse').val());
+				});
+			});
+			
+			// Efface résultat commande
+			$(function() {
+				$('#effaceResultCommande').click(function() {
+					$('#resultCommande').text('');
+				});
+			});
+			
+			// Mesure tension
+			$(function() {
+				$('#mesureTension').click(function() {
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getTension', function( result ) {
+						$('#valTension').text((Math.floor(result.tension * 100) / 100) + ' ' + result.unit);
+						$('#resultCommande').text(JSON.stringify(result));
+					});
+					$('#valCourant').text('');
+					$('#valPuissance').text('');
+				});
+			});
+			
+			// Mesure courant
+			$(function() {
+				$('#mesureCourant').click(function() {
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getCurrent', function( result ) {
+						$('#valCourant').text(result.current + ' ' + result.unit);
+						$('#resultCommande').text(JSON.stringify(result));
+					});
+					$('#valTension').text('');
+					$('#valPuissance').text('');
+				});
+			});
+			
+			// Mesure puissance
+			$(function() {
+				$('#mesurePuissance').click(function() {
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getPower', function( result ) {
+						$('#valPuissance').text(result.power + ' ' + result.unit);
+						$('#resultCommande').text(JSON.stringify(result));
+					});
+					$('#valTension').text('');
+					$('#valCourant').text('');
+				});
+			});
+			
+			// Commande relai
+			$(function() {
+				$('#relais').click(function() {
+					if($('#relais').prop('checked')) {
+						$('#resultCommande').load('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setRelai?state=on', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+					} else {
+						$('#resultCommande').load('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setRelai?state=off', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+					}
+				});
+			});
+			
+			// Réglage tension
+			$(function() {
+				$('#reglageTension').click(function() {
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setTension?valeur=' + $('#uniteTension').val() + '.' + $('#dixiemeTension').val() + $('#centiemeTension').val(), function( result ) {
+						$('#resultCommande').text(JSON.stringify(result));
+					});
+				});
+			});
+			
+			// Afficheurs
+			$(function() {
+				$('.affichage input[type="radio"]').click(function() {
+					switch($(this).val()) {
+						case 'Tension':
+							$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setAffiche?data=tension', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+							break;
+						case 'Courant':
+							$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setAffiche?data=current', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+							break;
+						case 'Puissance':
+							$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setAffiche?data=power', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+							break;
+						case 'Eteins':
+							$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setAffiche?data=off', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+							break;
+					}
+				});
+			});
+			
+			// Nombre de mesures par seconde
+			$(function() {
+				$('#nbMesure').click(function() {
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setMesure?nombre=' + $('#nbMesure').val(), function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+				});
+			});
+			
+			// Commande de la mémoire
+			$(function() {
+				$('#memoire').click(function() {
+					if($('#memoire').prop('checked')) {
+						$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setMemory?state=on', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+					} else {
+						$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setMemory?state=off', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+					}
+				});
+			});
+			
+			// Commande de la mémoire circulaire
+			$(function() {
+				$('#memoireCirculaire').click(function() {
+					if($('#memoireCirculaire').prop('checked')) {
+						$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setMemoryCircle?state=on', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+					} else {
+						$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setMemoryCircle?state=off', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+					}
+				});
+			});
+			
+			// Reset mémoire
+			$(function() {
+				$('#resetMemoire').click(function() {
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/resetMemory', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+				});
+			});
+			
+			// Pointeur mémoire
+			$(function() {
+				$('#pointeur').click(function() {
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getMemoryPointer', function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+				});
+			});
+			
+			// Réveil
+			$(function() {
+				$('#setReveil').click(function() {
+					let year = $('#dateReveil').val().substring(0, 4);
+					let month = $('#dateReveil').val().substring(5, 7);
+					let day = $('#dateReveil').val().substring(8);
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setReveil?date=' + day + '/' + month + '/' + year + '&heure=' + $('#timeReveil').val(), function( result ) {
+						$('#resultCommande').text(JSON.stringify(result));
+						$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getReveil', function( result ) {
+							let reveil = "";
+							if(result.day < 10) {
+								reveil = "0" + result.day + "/";
+							} else {
+								reveil = result.day + "/";
+							}	
+							if(result.month < 10) {
+								reveil += "0" + result.month + "/";
+							} else {
+								reveil += result.month + "/";
+							}	
+							reveil += result.year + " ";
+							if(result.hour < 10) {
+								reveil += "0" + result.hour + ":";
+							} else {
+								reveil += result.hour + ":";
+							}	
+							if(result.minute < 10) {
+								reveil += "0" + result.minute + ":";
+							} else {
+								reveil += result.minute + ":";
+							}	
+							if(result.second < 10) {
+								reveil += "0" + result.second;
+							} else {
+								reveil += result.second;
+							}	
+							
+							$('#reveil').text(reveil);
+						});
+					});
+				});
+			});
+			
+			// Usage mémoire
+			$(function() {
+				$('#usageMemoire').change(function() {
+					let valeur = $('#usageMemoire').val();
+					if(valeur < 0) {
+						valeur = 0;
+					}
+					if(valeur > 131070) {
+						valeur = 131070;
+					}
+					while(valeur % 5 != 0) {
+						valeur--;
+					}
+					$('#usageMemoire').val(valeur);
+					$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/setMemoryUsage?valeur=' + valeur, function( result ) {$('#resultCommande').text(JSON.stringify(result));});
+				});
+			});
+			
+			// Courbe
+			$(function() {
+				$('#courbe').click(function() {
+					// Dimension du Canvas
+					ctx = $('#myCanvas')[0].getContext('2d');
+					ctx.canvas.height = $('#resultCourbe').width() * 0.2;
+					ctx.canvas.width = $('#resultCourbe').width() * 0.5;
+					
+					// Entourage noir
+					ctx.beginPath(); 
+					ctx.moveTo(0,0);
+					ctx.lineTo(ctx.canvas.width, 0);
+					ctx.lineTo(ctx.canvas.width, ctx.canvas.height);
+					ctx.lineTo(0, ctx.canvas.height);
+					ctx.lineTo(0,0);
+					ctx.stroke();
+
+					// Courbe
+					const nbOctet = $('#usageMemoire').val();
+					
+					let resultat = [];
+					for(let compteur = 0; compteur != Math.trunc(nbOctet / 10000); compteur++) {
+						let min = compteur * 10000;
+						let max = ((compteur + 1) * 10000) - 1;
+						// Requête permettant d'avoir des réponses synchrones afin de remplir le tableau
+						const request = new XMLHttpRequest();
+						request.open('GET', 'http://' + $('#affAdresse').text() + $('#adresse').val() + '/getCurve?from=' + min + '&to=' + max, false);
+						request.send(null);
+						if(request.status === 200) {
+							resultat.push(request.responseText);
+						}
+					}
+					let min = Math.trunc(nbOctet / 10000) * 10000;
+					let max = nbOctet - 1;
+					const request = new XMLHttpRequest();
+					request.open('GET', 'http://' + $('#affAdresse').text() + $('#adresse').val() + '/getCurve?from=' + min + '&to=' + max, false);
+					request.send(null);
+					if(request.status === 200) {
+						resultat.push(request.responseText);
+					}
+					let strResult = resultat.join('').slice(0, -1);
+					
+					
+					// Tableau de résultats
+					$('#resultCommande').text(strResult.substring(0, 250) + '...');
+					const tabResult = strResult.split(';');
+					
+					// Tableau des temps
+					let tabTemps = [];
+					// Tableau des mesures
+					let tabMesure = [];
+					// Temps min max (axe X)
+					let tempsMin = 0;
+					let tempsMax = 0;
+					// Mesure min max (axe Y)
+					let mesureMin = Number.MAX_VALUE;
+					let mesureMax = 0;
+					
+					for(let compteur = 0; compteur < nbOctet; compteur += 5) {
+						// Calcul du temps
+						// * 1 pour éviter une concaténation des secondes au lieu d'une addition 
+						let temps = tabResult[compteur] * 3600 + tabResult[compteur + 1] * 60 + tabResult[compteur + 2] * 1;
+						// Mémorisation temps min
+						if(compteur == 0) {
+							tempsMin = temps;
+						}
+						// Mémorisation temps max
+						tempsMax = temps;
+						// Memorise le tableau des temps
+						tabTemps.push(temps);
+						
+						// Calcul de la mesure
+						let mesure = (tabResult[compteur + 3] * 256 + tabResult[compteur + 4] * 1) / 10.0;
+						// Gestion des mesures très légèrement négative
+						if(tabResult[compteur + 3] == 255) {
+							mesure = 0;
+						}
+						// Mémorise la mesure mini
+						if(mesureMin > mesure) {
+							mesureMin = mesure;
+						}
+						// Mémorise la mesure maxi
+						if(mesureMax < mesure) {
+							mesureMax = mesure;
+						}
+						// Mémorise le tableau des mesures	
+						tabMesure.push(mesure);
+					}
+					
+					// Mini sur le graphe
+					echelleMin = Math.floor(mesureMin / 100) * 100;
+					// Maxi sur le graphe
+					echelleMax = (Math.floor(mesureMax / 100) + 1 ) * 100;
+					
+					// Affichage des infos min et max
+					$('#tempsMin').text(tempsMin + ' s');
+					$('#tempsMax').text(tempsMax + ' s');
+					$('#mesureMin').text(mesureMin + ' mA');
+					$('#mesureMax').text(mesureMax + ' mA');
+					
+					// Echelle horizontale (10 valeurs entre mesure min et mesure max arrondi aux centaines min et max sur le graphe)
+					let pasVertical = ctx.canvas.height / 10;
+					let first = true;
+					let decalage = 8;
+					for(let compteur = 0; compteur != 11; compteur++) {
+						ctx.beginPath();
+						ctx.strokeStyle = "red";
+						ctx.moveTo(0, compteur * pasVertical);
+						ctx.lineTo(ctx.canvas.width, compteur * pasVertical);
+						ctx.stroke();
+						ctx.font = "6pt Calibri,Geneva,Arial";
+						ctx.fillStyle = "red";
+						ctx.fillText(echelleMax - (echelleMax - echelleMin) / 10 * compteur, 2, compteur * pasVertical + decalage);
+						if(first) {
+							decalage = -2;
+							first = false;
+						}
+					}
+					
+					// Echelle verticales
+					let pas = Math.floor((tempsMax - tempsMin) / 10) + 1;
+					let pasHorizontal = ctx.canvas.width / pas;
+					decalage = 2;
+					for(let compteur = 0; compteur < (tempsMax - tempsMin) / 10; compteur++) {
+						ctx.beginPath();
+						ctx.strokeStyle = "yellow";
+						ctx.moveTo(compteur * pasHorizontal, 0);
+						ctx.lineTo(compteur * pasHorizontal, ctx.canvas.height);
+						ctx.stroke();
+						ctx.font = "6pt Calibri,Geneva,Arial";
+						ctx.fillStyle = "yellow";
+						ctx.fillText(compteur * 10, compteur * pasHorizontal + decalage, 7);
+					}
+					
+					// Affichage des points de mesure en vert
+					let valeur = Number.MAX_VALUE;
+					let temps = tabTemps[0];
+					let mesure = 0;
+					let nbMesure = 0;
+					ctx.beginPath();
+					ctx.strokeStyle = "green";
+					ctx.moveTo(0, ctx.canvas.height - (ctx.canvas.height * (tabMesure[0] - echelleMin) / (echelleMax - echelleMin)));
+					for(let compteur = 0; compteur != tabTemps.length; compteur++) {
+						ctx.lineTo(ctx.canvas.width * (tabTemps[compteur] - tempsMin) / (tempsMax - tempsMin), ctx.canvas.height - (ctx.canvas.height * (tabMesure[compteur] - echelleMin) / (echelleMax - echelleMin)));
+					} 
+					ctx.stroke();
+				});
+			});
+			
+			// *************************************
+			//
+			//      Affiche la tension réglée
+			//
+			// *************************************
+			function affTension() { 				
+				$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getTension', function( result ) {
+					roundTension = (Math.round(result.tension * 100)) / 100; 
+					const unite = Math.trunc(roundTension);
+					const dizieme = Math.trunc((roundTension - unite) * 10);
+					const centieme = Math.trunc((roundTension * 10 - Math.trunc(roundTension * 10)) * 10);
+					$('#uniteTension').val(unite);
+					$('#dixiemeTension').val(dizieme);
+					$('#centiemeTension').val(centieme);
+					$('#resultCommande').html('<h3><font color="white"> Connecté</h3>');
+				});
+			}
+			
+
+			// *************************************
+			//
+			//      Affiche l'état du relais
+			//
+			// *************************************
+			function affRelais() { 				
+				// Etat du relai
+				$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getRelai', function( result ) {
+					if(result.state == 'on') {
+						$('#relais').prop('checked', true);
+					} else {
+						$('#relais').prop('checked', false);
+					}
+				});
+			}	
+
+			// **********************************************
+			//
+			//      Affiche la date et l'heure du réveil
+			//
+			// **********************************************
+			function affReveil() { 				
+				// Réveil
+				$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getReveil', function( result ) {
+					let reveil = "";
+					if(result.day < 10) {
+						reveil = "0" + result.day + "/";
+					} else {
+						reveil = result.day + "/";
+					}	
+					if(result.month < 10) {
+						reveil += "0" + result.month + "/";
+					} else {
+						reveil += result.month + "/";
+					}
+					if(result.year == 0) {
+						reveil += '000';
+					}
+					reveil += result.year + " ";
+					if(result.hour < 10) {
+						reveil += "0" + result.hour + ":";
+					} else {
+						reveil += result.hour + ":";
+					}	
+					if(result.minute < 10) {
+						reveil += "0" + result.minute + ":";
+					} else {
+						reveil += result.minute + ":";
+					}	
+					if(result.second < 10) {
+						reveil += "0" + result.second;
+					} else {
+						reveil += result.second;
+					}	
+					
+					date = result.year + '-';
+					if(result.month < 10) {
+						date += "0" + result.month + "-";
+					} else {
+						date += result.month + "-";
+					}
+					if(result.day < 10) {
+						date += "0" + result.day;
+					} else {
+						date += result.day;
+					}
+
+					$("#dateReveil").val(date);
+					$("#timeReveil").val(reveil.substring(11));
+				});
+			}
+
+			// **********************************************
+			//
+			//      Affiche l'état des afficheurs
+			//
+			// **********************************************
+			function stateAffichage() { 				
+				// Etat de l'affichage
+				$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getAffiche', function( result ) {
+					switch(result.state) {
+						case 'Tension':
+							$('#affTension').prop('checked', true);
+							break;
+						case 'Courant':
+							$('#affCourant').prop('checked', true);
+							break;
+						case 'Puissance':
+							$('#affPuissance').prop('checked', true);
+							break;
+						case 'Eteins':
+							$('#affEteins').prop('checked', true);
+							break;
+					}
+				});	
+			}
+				
+			// *************************************************
+			//
+			//      Affiche le nombre de mesure par seconde
+			//
+			// *************************************************
+			function nombreMesures() { 				
+				// Nombre de mesures mémorisées par seconde
+				$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getMesure', function( result ) {
+					$('#nbMesure').val(result.nombre);
+				});
+			}
+				
+			// **********************************************
+			//
+			//         Affiche l'état de la mémoire
+			//
+			// **********************************************
+			function stateMemory() { 				
+				// Etat de la mémoire
+				$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getMemory', function( result ) {
+					if(result.state == 'on') {
+						$('#memoire').prop('checked', true);
+					} else {
+						$('#memoire').prop('checked', false);
+					}
+				});
+			}
+				
+			// *************************************************
+			//
+			//      Affiche l'état circulaire de la mémoire
+			//
+			// *************************************************
+			function stateCircleMemory() { 				
+				// Etat de la mémoire circulaire
+				$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getMemoryCircle', function( result ) {
+					if(result.state == 'on') {
+						$('#memoireCirculaire').prop('checked', true);
+					} else {
+						$('#memoireCirculaire').prop('checked', false);
+					}
+				});
+			}
+				
+			// **********************************************
+			//
+			//        Affiche l'usage de la mémoire
+			//
+			// **********************************************
+			function memoryUsage() { 				
+				// Usage de la mémoire
+				$.get('http://' + $('#affAdresse').text() + $('#adresse').val() + '/getMemoryUsage', function( result ) {
+					$('#usageMemoire').val(result.usage);
+				});						
+			}
+		</script>
+	</body>
+</html>

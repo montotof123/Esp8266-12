@@ -1,0 +1,16 @@
+.bordered {
+	padding: 10px;
+	border-radius: 70px;
+    border: 10px ridge blue;
+}
+  
+.borderedCarre {
+    padding: 1px;
+	border-radius: 10px;
+    border: 10px ridge blue;
+}
+
+canvas {
+    border: 1px dotted black;
+    background: lightGray
+}
